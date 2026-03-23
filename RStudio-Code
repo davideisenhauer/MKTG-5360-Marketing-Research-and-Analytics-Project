@@ -1,0 +1,206 @@
+##Chi test:
+# Load packages
+library(ggplot2)
+library(tidyr)
+library(scales)
+
+# CONTINGENCY TABLE
+# Familiarity vs Motivation
+
+fam_mot_tab <- matrix(
+  c(22, 5,   # Familiar Yes: Motivated Yes, No
+    5, 7),   # Familiar No: Motivated Yes, No
+  nrow = 2,
+  byrow = TRUE
+)
+
+rownames(fam_mot_tab) <- c("Familiar_Yes", "Familiar_No")
+colnames(fam_mot_tab) <- c("Motivated_Yes", "Motivated_No")
+
+# View table
+print(fam_mot_tab)
+
+# CHI-SQUARE TEST
+
+chisq_result <- chisq.test(fam_mot_tab)
+
+print(chisq_result)
+print(chisq_result$expected)
+
+# APA-style output
+cat(
+  sprintf(
+    "χ²(%d, N = %d) = %.2f, p = %.3f\n",
+    chisq_result$parameter,
+    sum(fam_mot_tab),
+    unname(chisq_result$statistic),
+    chisq_result$p.value
+  )
+)
+
+# Optional: Fisher’s Exact Test (for small sample robustness)
+fisher_result <- fisher.test(fam_mot_tab)
+print(fisher_result)
+
+# PREP DATA FOR GRAPHS
+
+plot_data <- as.data.frame(fam_mot_tab)
+plot_data$Familiarity <- rownames(plot_data)
+
+plot_data_long <- pivot_longer(
+  plot_data,
+  cols = c("Motivated_Yes", "Motivated_No"),
+  names_to = "Motivation",
+  values_to = "Count"
+)
+
+print(plot_data_long)
+
+# GRAPH 1: Grouped Bar Chart
+
+p1 <- ggplot(plot_data_long, aes(x = Familiarity, y = Count, fill = Motivation)) +
+  geom_col(position = "dodge") +
+  labs(
+    title = "Familiarity vs Motivation to Shop at ReStore",
+    x = "Familiar with Habitat",
+    y = "Number of Respondents",
+    fill = "Motivation"
+  ) +
+  theme_minimal()
+
+print(p1)
+
+# GRAPH 2: 100% Stacked Bar Chart
+
+p2 <- ggplot(plot_data_long, aes(x = Familiarity, y = Count, fill = Motivation)) +
+  geom_col(position = "fill") +
+  scale_y_continuous(labels = percent_format()) +
+  labs(
+    title = "Proportion Motivated to Shop by Familiarity",
+    x = "Familiar with Habitat",
+    y = "Percent",
+    fill = "Motivation"
+  ) +
+  theme_minimal()
+
+print(p2)
+
+##Graphs:
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(scales)
+library(tidyr)
+
+file_path <- "/Users/davideisenhauer/Downloads/MKTG 5360 Quant Analysis.xlsx"
+
+# Read the sheet with the class-level cross-tab counts
+by_class <- read_excel(file_path, sheet = "By Class", col_names = FALSE)
+
+# Academic classification x Would donate if bins were placed around campus
+donation_tab <- matrix(
+  c(5, 2,   # Freshman: Yes, No
+    3, 4,   # Sophomore: Yes, No
+    13, 6,  # Junior: Yes, No
+    4, 0),  # Senior: Yes, No
+  nrow = 4,
+  byrow = TRUE
+)
+
+rownames(donation_tab) <- c("Freshman", "Sophomore", "Junior", "Senior")
+colnames(donation_tab) <- c("Yes", "No")
+
+# Chi-square test
+chisq_result <- chisq.test(donation_tab)
+
+# Fisher's exact test (useful because of small expected counts / zero cell)
+fisher_result <- fisher.test(donation_tab)
+
+# View outputs
+print(by_class)
+print(donation_tab)
+print(chisq_result)
+print(chisq_result$expected)
+print(fisher_result)
+
+# APA-style reporting line
+cat(
+  sprintf(
+    "Chi-square test: χ²(%d, N = %d) = %.2f, p = %.3f\n",
+    chisq_result$parameter,
+    sum(donation_tab),
+    unname(chisq_result$statistic),
+    chisq_result$p.value
+  )
+)
+
+cat(
+  sprintf(
+    "Fisher's Exact Test p-value = %.3f\n",
+    fisher_result$p.value
+  )
+)
+
+# Convert to data frame
+plot_data <- as.data.frame(donation_tab)
+plot_data$Classification <- rownames(plot_data)
+
+# Convert wide to long format for ggplot
+plot_data_long <- pivot_longer(
+  plot_data,
+  cols = c("Yes", "No"),
+  names_to = "Donate",
+  values_to = "Count"
+)
+
+print(plot_data_long)
+
+# Graph 1: Grouped bar chart
+ggplot(plot_data_long, aes(x = Classification, y = Count, fill = Donate)) +
+  geom_col(position = "dodge") +
+  labs(
+    title = "Willingness to Use Donation Bins by Academic Classification",
+    x = "Academic Classification",
+    y = "Number of Respondents",
+    fill = "Would Donate"
+  ) +
+  theme_minimal()
+
+# Graph 2: 100% stacked bar chart
+ggplot(plot_data_long, aes(x = Classification, y = Count, fill = Donate)) +
+  geom_col(position = "fill") +
+  scale_y_continuous(labels = percent_format()) +
+  labs(
+    title = "Share Willing to Use Donation Bins by Academic Classification",
+    x = "Academic Classification",
+    y = "Percent of Respondents",
+    fill = "Would Donate"
+  ) +
+  theme_minimal()
+
+###Graph 2 (donation bins by classification)
+p1 <- ggplot(plot_data_long, aes(x = Classification, y = Count, fill = Donate)) +
+  geom_col(position = "dodge") +
+  labs(
+    title = "Willingness to Use Donation Bins by Academic Classification",
+    x = "Academic Classification",
+    y = "Number of Respondents",
+    fill = "Would Donate"
+  ) +
+  theme_minimal()
+
+print(p1)
+
+###Graph 2 (gray)
+p3 <- ggplot(summary_plot_data, aes(x = reorder(Question, Yes_Percent), y = Yes_Percent)) +
+  geom_col() +
+  coord_flip() +
+  scale_y_continuous(labels = percent_format(scale = 1)) +
+  labs(
+    title = "Key Survey Findings: Percent Answering Yes",
+    x = "Survey Question",
+    y = "Percent Yes"
+  ) +
+  theme_minimal()
+
+print(p3)
